@@ -13,11 +13,11 @@ ASSIGNMENT_ID = 2  # Sebaiknya gunakan angka, bukan string
 
 # 2. Pemetaan Manual dari Username GitHub ke Email yang Terdaftar di Moodle
 GITHUB_TO_EMAIL_MAP = {
-    "DhaniDS": "fastgoole@gmail.com"
-    "dhanidds": "localhouse2402@gmail.com"
-    "dhans24": "dhanidwinawans12@gmail.com"
-    "iccanfly": "iccanfly@gmail.com"
-    "mahasiswa4": "ican88030@gmail.com"
+    "DhaniDS": "fastgoole@gmail.com",
+    "dhanidds": "localhouse2402@gmail.com",
+    "dhans24": "dhanidwinawans12@gmail.com",
+    "iccanfly": "iccanfly@gmail.com",
+    "mahasiswa4": "ican88030@gmail.com",
     "mahasiswa5": "icann1400@gmail.com",
     # --- TAMBAHKAN SEMUA MAHASISWA ANDA DI SINI ---
 }
