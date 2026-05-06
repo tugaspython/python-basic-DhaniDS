@@ -118,6 +118,13 @@ if user_id:
 
     try:
         response = requests.post(f"{MOODLE_URL}/webservice/rest/server.php", params=grade_params)
+        
+        # --- PENAMBAHAN LOG API UNTUK BUKTI PENGUJIAN ---
+        print("\n--- BUKTI INTEGRASI API MOODLE ---")
+        print(f"Status Code HTTP: {response.status_code}")
+        print(f"Balasan Server Moodle (Payload): {response.text}")
+        print("----------------------------------\n")
+        
         response.raise_for_status()
         
         # Periksa jika ada 'exception' dalam respons JSON
@@ -131,5 +138,5 @@ if user_id:
     except Exception as e:
         print(f"❌ Error Kritis saat mengirim nilai: {e}")
         if 'response' in locals():
-            print("Response mentah dari server:", response.text)
+            print(f"Response mentah dari server: {response.text}")
         exit(1)
