@@ -150,11 +150,12 @@ if user_id:
         print(f"Status Code HTTP: {response.status_code}")
         print(f"Balasan Server: {response.text}")
         print("----------------------------------\n")
+       # Simpan respons JSON ke dalam variabel
+        json_response = response.json()
         
-        if 'exception' in response.json():
-            print(f"❌ Error API: {response.json()}")
+        # Cek apakah balasan berupa dictionary (objek) DAN memiliki kata 'exception'
+        if isinstance(json_response, dict) and 'exception' in json_response:
+            print(f"❌ Error API: {json_response}")
         else:
-            print("✅ SUKSES! Nilai dan analisis kualitas kode berhasil dikirim.")
-
-    except Exception as e:
-        print(f"❌ Error saat mengirim data: {e}")
+            # Jika balasan null atau tidak ada exception, berarti sukses!
+            print("✅ SUKSES! Nilai dan analisis kualitas kode berhasil dikirim ke Moodle.")
