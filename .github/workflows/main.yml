@@ -28,7 +28,7 @@ jobs:
       - name: Analyze Code Complexity
         # Menjalankan Radon (cc = Cyclomatic Complexity) 
         # Output dalam format JSON (-j) ke file complexity.json
-        run: radon cc . -j > complexity.json
+        run: radon cc jawaban_mahasiswa.py -j > complexity.json
 
       - name: Sync Grades to Moodle
         env:
