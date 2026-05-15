@@ -33,6 +33,6 @@ jobs:
       - name: Sync Grades to Moodle
         env:
           MOODLE_TOKEN: ${{ secrets.MOODLE_TOKEN }}
-          ASSIGNMENT_ID: ${{ secrets.ASSIGNMENT_ID }}
+          GITHUB_USERNAME: ${{ github.actor }}
           # Pastikan rahasia ini sudah diatur di GitHub Settings > Secrets
         run: python .github/workflows/grade_poster.py
