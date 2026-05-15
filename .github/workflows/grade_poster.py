@@ -127,7 +127,11 @@ except Exception as e:
     exit(1)
 
 # --- Langkah 4: Kirim Nilai dan Gabungan Feedback ke Moodle ---
+# --- Langkah 4: Kirim Nilai dan Gabungan Feedback ke Moodle ---
 if user_id: 
+    # 👇 TAMBAHKAN 1 BARIS INI UNTUK MENGUBAH ENTER MENJADI <br> HTML 👇
+    final_feedback_html = final_feedback.replace('\n', '<br>')
+
     grade_params = {
         'wstoken': MOODLE_TOKEN,
         'wsfunction': 'mod_assign_save_grade',
@@ -139,7 +143,8 @@ if user_id:
         'addattempt': 0,
         'workflowstate': 'graded',
         'applytoall': 1,
-        'plugindata[assignfeedbackcomments_editor][text]': final_feedback,
+        # 👇 PASTIKAN NAMA VARIABELNYA DIUBAH MENJADI final_feedback_html 👇
+        'plugindata[assignfeedbackcomments_editor][text]': final_feedback_html,
         'plugindata[assignfeedbackcomments_editor][format]': 1
     }
 
