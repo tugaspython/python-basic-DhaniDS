@@ -1,14 +1,13 @@
-name: Moodle Autograder CI
+name: Autograding and Complexity Analysis
 
 on: [push]
 
 jobs:
-  build-and-test:
-    if: github.actor != 'github-classroom[bot]'
+  autograding:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -18,18 +17,22 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Menambahkan pytest-json-report yang sangat penting
-          pip install pytest requests pytest-json-report
+          # Menginstal pytest, plugin json-report, requests, dan radon
+          pip install pytest pytest-json-report requests radon
 
-      - name: Run tests with pytest
-        id: run-tests
-        run: |
-          # Perintah ini sekarang akan berhasil membuat report.json
-          pytest --json-report --json-report-file=report.json || true
-      
-      - name: Grade and Post to Moodle
-        run: |
-          python .github/workflows/grade_poster.py
+      - name: Run Pytest
+        # Menjalankan tes dan menyimpan hasilnya ke report.json
+        run: pytest --json-report --json-report-file=report.json || true
+        # '|| true' memastikan workflow tetap lanjut meskipun ada tes yang gagal
+
+      - name: Analyze Code Complexity
+        # Menjalankan Radon (cc = Cyclomatic Complexity) 
+        # Output dalam format JSON (-j) ke file complexity.json
+        run: radon cc . -j > complexity.json
+
+      - name: Sync Grades to Moodle
         env:
           MOODLE_TOKEN: ${{ secrets.MOODLE_TOKEN }}
-          GITHUB_USERNAME: ${{ github.actor }}
+          ASSIGNMENT_ID: ${{ secrets.ASSIGNMENT_ID }}
+          # Pastikan rahasia ini sudah diatur di GitHub Settings > Secrets
+        run: python .github/scripts/grade_poster.py
