@@ -8,8 +8,8 @@ import json
 
 # 1. URL Moodle, ID Kursus, dan ID Tugas
 MOODLE_URL = "http://3.27.152.91/moodle"
-COURSE_ID = 2      # Sebaiknya gunakan angka, bukan string
-ASSIGNMENT_ID = 2  # Sebaiknya gunakan angka, bukan string
+COURSE_ID = 2
+ASSIGNMENT_ID = 2
 
 # 2. Pemetaan Manual dari Username GitHub ke Email yang Terdaftar di Moodle
 GITHUB_TO_EMAIL_MAP = {
@@ -19,8 +19,42 @@ GITHUB_TO_EMAIL_MAP = {
     "iccanfly": "iccanfly@gmail.com",
     "mahasiswa4": "ican88030@gmail.com",
     "mahasiswa5": "icann1400@gmail.com",
-    # --- TAMBAHKAN SEMUA MAHASISWA ANDA DI SINI ---
 }
+
+# ==============================================================================
+# FUNGSI TAMBAHAN: ANALISIS KOMPLEKSITAS (RADON)
+# ==============================================================================
+
+def get_complexity_feedback(filepath="complexity.json"):
+    """Membaca file JSON dari Radon dan mengembalikan string umpan balik."""
+    if not os.path.exists(filepath):
+        return "\n⚠️ Catatan: Analisis kualitas kode (Radon) tidak tersedia."
+
+    try:
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+            
+        feedback_lines = ["\n--- Analisis Kualitas Kode (Cyclomatic Complexity) ---"]
+        
+        for filename, blocks in data.items():
+            if not isinstance(blocks, list): 
+                continue
+                
+            for block in blocks:
+                tipe = block.get('type', 'block')
+                nama = block.get('name', 'unknown')
+                skor_cc = block.get('complexity', 1)
+                grade = block.get('rank', 'A')
+                
+                feedback_lines.append(f"- {tipe.capitalize()} '{nama}': Grade {grade} (Skor CC: {skor_cc})")
+        
+        if len(feedback_lines) == 1:
+            feedback_lines.append("- Semua blok kode memiliki efisiensi yang sangat baik (Grade A).")
+            
+        return "\n".join(feedback_lines)
+
+    except Exception as e:
+        return f"\n[Peringatan] Gagal memproses data kompleksitas: {str(e)}"
 
 # ==============================================================================
 # BAGIAN LOGIKA SKRIP
@@ -34,44 +68,42 @@ if not MOODLE_TOKEN or not GITHUB_USERNAME:
     print("❌ Error: Variabel MOODLE_TOKEN atau GITHUB_USERNAME tidak ditemukan.")
     exit(1)
 
-# --- Langkah 2: Hitung Nilai dari Hasil Tes ---
+# --- Langkah 2: Hitung Nilai dari Hasil Tes (Pytest) ---
 grade = 0
-feedback = "Feedback belum tersedia."
-TOTAL_SOAL = 20  # Mengunci total soal menjadi 20 sesuai instruksi
+pytest_feedback = ""
+TOTAL_SOAL = 20
 
 try:
     with open('report.json') as f:
         report = json.load(f)
     
-    # Hanya mengambil jumlah test yang berstatus 'passed' (lulus)
     passed_tests = report['summary'].get('passed', 0)
-    
-    # Menghitung test yang salah/gagal dari total soal yang dikunci
     failed_tests = TOTAL_SOAL - passed_tests
-    
-    # Menghitung nilai skala 100
     grade = (passed_tests / TOTAL_SOAL) * 100
     
-    feedback = f"Hasil Tes Otomatis:\n- Total Soal: {TOTAL_SOAL}\n- Benar: {passed_tests}\n- Salah/Gagal: {failed_tests}\n\nNilai Anda: {grade:.2f} / 100"
-    print(f"✅ Berhasil menghitung nilai: {grade} (Benar {passed_tests} dari {TOTAL_SOAL} soal)")
+    pytest_feedback = f"Hasil Tes Otomatis:\n- Total Soal: {TOTAL_SOAL}\n- Benar: {passed_tests}\n- Salah/Gagal: {failed_tests}\n\nNilai Fungsional: {grade:.2f} / 100"
+    print(f"✅ Berhasil menghitung nilai: {grade}")
 
 except FileNotFoundError:
     grade = 0
-    feedback = f"Gagal menjalankan tes. File `report.json` tidak ditemukan. Total Soal: {TOTAL_SOAL}, Benar: 0, Salah: {TOTAL_SOAL}. Nilai: 0.00"
-    print("⚠️ Warning: File report.json tidak ditemukan, nilai diatur ke 0.")
+    pytest_feedback = f"Gagal menjalankan tes. File `report.json` tidak ditemukan. Nilai: 0.00"
+    print("⚠️ Warning: File report.json tidak ditemukan.")
 except Exception as e:
     grade = 0
-    feedback = f"Terjadi error saat memproses hasil tes: {e}"
-    print(f"❌ Error saat memproses report.json: {e}")
+    pytest_feedback = f"Terjadi error saat memproses hasil tes: {e}"
+
+# --- Langkah baru: Ambil Analisis Kompleksitas (Radon) ---
+radon_feedback = get_complexity_feedback('complexity.json')
+
+# GABUNGKAN SEMUA FEEDBACK
+final_feedback = f"{pytest_feedback}\n{radon_feedback}"
 
 # --- Langkah 3: Cari User Moodle Berdasarkan Email ---
 moodle_email = GITHUB_TO_EMAIL_MAP.get(GITHUB_USERNAME)
 
 if not moodle_email:
-    print(f"❌ Error: Username GitHub '{GITHUB_USERNAME}' tidak ditemukan dalam pemetaan manual GITHUB_TO_EMAIL_MAP.")
+    print(f"❌ Error: Username GitHub '{GITHUB_USERNAME}' tidak terdaftar.")
     exit(1)
-
-print(f"Mencari pengguna Moodle dengan email: {moodle_email}")
 
 search_params = {
     'wstoken': MOODLE_TOKEN,
@@ -84,23 +116,18 @@ search_params = {
 user_id = None 
 try:
     response = requests.get(f"{MOODLE_URL}/webservice/rest/server.php", params=search_params)
-    response.raise_for_status()
     users = response.json().get('users', [])
     if not users:
-        print(f"❌ Error: Tidak ada pengguna Moodle yang ditemukan dengan email '{moodle_email}'.")
+        print(f"❌ Error: Email '{moodle_email}' tidak ditemukan di Moodle.")
         exit(1)
     user_id = users[0]['id'] 
-    print(f"✅ Berhasil menemukan Moodle User ID: {user_id}")
+    print(f"✅ User ID ditemukan: {user_id}")
 except Exception as e:
-    print(f"❌ Error Kritis saat mencari user Moodle: {e}")
-    if 'response' in locals():
-        print("Response mentah dari server:", response.text)
+    print(f"❌ Error saat mencari user: {e}")
     exit(1)
 
-# --- Langkah 4: Kirim Nilai dan Feedback ke Moodle ---
+# --- Langkah 4: Kirim Nilai dan Gabungan Feedback ke Moodle ---
 if user_id: 
-    print(f"Mengirimkan nilai {grade:.2f} untuk user {user_id} ke tugas {ASSIGNMENT_ID}...")
-    
     grade_params = {
         'wstoken': MOODLE_TOKEN,
         'wsfunction': 'mod_assign_save_grade',
@@ -112,31 +139,22 @@ if user_id:
         'addattempt': 0,
         'workflowstate': 'graded',
         'applytoall': 1,
-        'plugindata[assignfeedbackcomments_editor][text]': feedback,
+        'plugindata[assignfeedbackcomments_editor][text]': final_feedback,
         'plugindata[assignfeedbackcomments_editor][format]': 1
     }
 
     try:
         response = requests.post(f"{MOODLE_URL}/webservice/rest/server.php", params=grade_params)
         
-        # --- PENAMBAHAN LOG API UNTUK BUKTI PENGUJIAN ---
         print("\n--- BUKTI INTEGRASI API MOODLE ---")
         print(f"Status Code HTTP: {response.status_code}")
-        print(f"Balasan Server Moodle (Payload): {response.text}")
+        print(f"Balasan Server: {response.text}")
         print("----------------------------------\n")
         
-        response.raise_for_status()
-        
-        # Periksa jika ada 'exception' dalam respons JSON
-        json_response = response.json()
-        if isinstance(json_response, dict) and 'exception' in json_response:
-            print(f"❌ Error dari Moodle API saat menyimpan nilai: {json_response}")
-            exit(1)
+        if 'exception' in response.json():
+            print(f"❌ Error API: {response.json()}")
         else:
-            print("✅ SUKSES! Perintah berhasil dikirim ke Moodle. Silakan cek gradebook.")
+            print("✅ SUKSES! Nilai dan analisis kualitas kode berhasil dikirim.")
 
     except Exception as e:
-        print(f"❌ Error Kritis saat mengirim nilai: {e}")
-        if 'response' in locals():
-            print(f"Response mentah dari server: {response.text}")
-        exit(1)
+        print(f"❌ Error saat mengirim data: {e}")
