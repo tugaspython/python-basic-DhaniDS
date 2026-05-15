@@ -35,4 +35,4 @@ jobs:
           MOODLE_TOKEN: ${{ secrets.MOODLE_TOKEN }}
           ASSIGNMENT_ID: ${{ secrets.ASSIGNMENT_ID }}
           # Pastikan rahasia ini sudah diatur di GitHub Settings > Secrets
-        run: python .github/scripts/grade_poster.py
+        run: python .github/workflows/grade_poster.py
