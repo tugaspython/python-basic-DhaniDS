@@ -69,28 +69,42 @@ if not MOODLE_TOKEN or not GITHUB_USERNAME:
     exit(1)
 
 # --- Langkah 2: Hitung Nilai dari Hasil Tes (Pytest) ---
+# --- Langkah 2: Hitung Nilai dari Hasil Tes (Pytest) ---
 grade = 0
 pytest_feedback = ""
-TOTAL_SOAL = 20
 
 try:
     with open('report.json') as f:
         report = json.load(f)
     
-    passed_tests = report['summary'].get('passed', 0)
-    failed_tests = TOTAL_SOAL - passed_tests
-    grade = (passed_tests / TOTAL_SOAL) * 100
+    # Ambil bagian summary dari JSON
+    summary = report.get('summary', {})
     
-    pytest_feedback = f"Hasil Tes Otomatis:\n- Total Soal: {TOTAL_SOAL}\n- Benar: {passed_tests}\n- Salah/Gagal: {failed_tests}\n\nNilai Fungsional: {grade:.2f} / 100"
-    print(f"✅ Berhasil menghitung nilai: {grade}")
+    # Ambil jumlah lulus dan gagal secara dinamis
+    passed_tests = summary.get('passed', 0)
+    failed_tests = summary.get('failed', 0)
+    
+    # Hitung total soal berdasarkan jumlah test yang ada di JSON
+    TOTAL_SOAL = summary.get('total', passed_tests + failed_tests)
+    
+    # Kalkulasi nilai (mencegah error dibagi 0 jika soal tidak terbaca)
+    if TOTAL_SOAL > 0:
+        grade = (passed_tests / TOTAL_SOAL) * 100
+    else:
+        grade = 0
+        TOTAL_SOAL = 0
+    
+    pytest_feedback = f"Hasil Tes Otomatis:\n- Total Test Cases: {TOTAL_SOAL}\n- Benar: {passed_tests}\n- Salah/Gagal: {failed_tests}\n\nNilai Fungsional: {grade:.2f} / 100"
+    print(f"✅ Berhasil menghitung nilai: {grade:.2f} (Benar {passed_tests} dari {TOTAL_SOAL} soal)")
 
 except FileNotFoundError:
     grade = 0
-    pytest_feedback = f"Gagal menjalankan tes. File `report.json` tidak ditemukan. Nilai: 0.00"
+    pytest_feedback = "Gagal menjalankan tes. File `report.json` tidak ditemukan. Nilai: 0.00"
     print("⚠️ Warning: File report.json tidak ditemukan.")
 except Exception as e:
     grade = 0
     pytest_feedback = f"Terjadi error saat memproses hasil tes: {e}"
+    print(f"❌ Error memproses JSON: {e}")
 
 # --- Langkah baru: Ambil Analisis Kompleksitas (Radon) ---
 radon_feedback = get_complexity_feedback('complexity.json')
