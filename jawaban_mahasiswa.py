@@ -1,13 +1,10 @@
 def validasi_password(password):
     if len(password) < 8:
         return False
-
-    # Kesalahan fatal: Menggunakan nested loop O(N^2)
-    # Mengecek apakah ada spasi dengan membandingkan semua karakter satu per satu
-    for i in range(len(password)):
-        for j in range(len(password)):
-            if password[j] == ' ':
-                return False
+    
+    # Pendekatan O(N): Hanya butuh 1 kali perulangan (Single Pass)
+    if ' ' in password: # in pada string adalah O(N)
+        return False
 
     ada_angka = False
     ada_simbol = False
