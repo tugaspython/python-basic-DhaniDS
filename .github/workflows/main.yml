@@ -1,38 +1,40 @@
-name: Autograding and Complexity Analysis
+name: Autograder Pemrograman Python
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
-  autograding:
+  build-and-test:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+    - name: Setup Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          # Menginstal pytest, plugin json-report, requests, dan radon
-          pip install pytest pytest-json-report requests radon
+    - name: Instalasi Dependensi (Pytest, Radon, Timeout)
+      run: |
+        python -m pip install --upgrade pip
+        # Tambahkan pytest-timeout di sini
+        pip install pytest pytest-json-report radon pytest-timeout requests
 
-      - name: Run Pytest
-        # Menjalankan tes dan menyimpan hasilnya ke report.json
-        run: pytest --json-report --json-report-file=report.json || true
-        # '|| true' memastikan workflow tetap lanjut meskipun ada tes yang gagal
+    - name: Evaluasi Fungsionalitas dan Time Complexity (Big O)
+      # Gunakan flag --timeout untuk membatasi eksekusi per test case (misal: 2 detik)
+      run: |
+        pytest --timeout=2 --json-report --json-report-file=report.json
 
-      - name: Analyze Code Complexity
-        # Menjalankan Radon (cc = Cyclomatic Complexity) 
-        # Output dalam format JSON (-j) ke file complexity.json
-        run: radon cc jawaban_mahasiswa.py -j > complexity.json
+    - name: Evaluasi Cyclomatic Complexity (Struktur Kode)
+      run: |
+        radon cc jawaban_mahasiswa.py -j > complexity.json
 
-      - name: Sync Grades to Moodle
-        env:
-          MOODLE_TOKEN: ${{ secrets.MOODLE_TOKEN }}
-          GITHUB_USERNAME: ${{ github.actor }}
-          # Pastikan rahasia ini sudah diatur di GitHub Settings > Secrets
-        run: python .github/workflows/grade_poster.py
+    - name: Sinkronisasi Nilai ke Moodle (Middleware)
+      env:
+        MOODLE_TOKEN: ${{ secrets.MOODLE_TOKEN }}
+      run: |
+        python grade_poster.py
