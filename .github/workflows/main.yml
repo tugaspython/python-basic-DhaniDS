@@ -25,7 +25,6 @@ jobs:
         pip install pytest pytest-json-report radon pytest-timeout requests
 
     - name: Evaluasi Fungsionalitas dan Time Complexity (Big O)
-      # Gunakan flag --timeout untuk membatasi eksekusi per test case (misal: 2 detik)
       run: |
         pytest --timeout=2 --json-report --json-report-file=report.json
 
