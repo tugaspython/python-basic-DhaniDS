@@ -36,5 +36,6 @@ jobs:
     - name: Sinkronisasi Nilai ke Moodle (Middleware)
       env:
         MOODLE_TOKEN: ${{ secrets.MOODLE_TOKEN }}
+        GITHUB_USERNAME: ${{ github.actor }}
       run: |
         python .github/workflows/grade_poster.py
