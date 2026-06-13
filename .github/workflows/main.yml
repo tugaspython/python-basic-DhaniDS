@@ -37,4 +37,4 @@ jobs:
       env:
         MOODLE_TOKEN: ${{ secrets.MOODLE_TOKEN }}
       run: |
-        python grade_poster.py
+        python .github/workflows/grade_poster.py
