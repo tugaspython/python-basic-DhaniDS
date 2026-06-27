@@ -1,18 +1,11 @@
-def validasi_password(password):
-    if len(password) < 8:
-        return False
-    
-    # Pendekatan O(N): Hanya butuh 1 kali perulangan (Single Pass)
-    if ' ' in password: # in pada string adalah O(N)
-        return False
-
-    ada_angka = False
-    ada_simbol = False
-    ada_huruf_besar = False
-
-    for char in password:
-        if char.isdigit(): ada_angka = True
-        elif char.isupper(): ada_huruf_besar = True
-        elif not char.isalnum(): ada_simbol = True
-
-    return ada_angka and ada_simbol and ada_huruf_besar
+1.	# File: test_password.py
+2.	from jawaban_mahasiswa import validasi_password
+3.	
+4.	def test_validasi_sukses():
+5.	assert validasi_password("PasswordKuat123!") == True
+6.	assert validasi_password("P@ssw0rd") == True
+7.	
+8.	def test_validasi_gagal():
+9.	assert validasi_password("lemah") == False
+10.	assert validasi_password("TanpaAngka!") == False
+11.	assert validasi_password("TanpaSimbol123") == False
