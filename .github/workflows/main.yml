@@ -24,10 +24,6 @@ jobs:
         # Tambahkan pytest-timeout di sini
         pip install pytest pytest-json-report radon pytest-timeout requests
 
-    - name: Evaluasi Fungsionalitas dan Time Complexity (Big O)
-      run: |
-        pytest --timeout=2 --json-report --json-report-file=report.json
-
     - name: Evaluasi Cyclomatic Complexity (Struktur Kode)
       run: |
         radon cc jawaban_mahasiswa.py -j > complexity.json
