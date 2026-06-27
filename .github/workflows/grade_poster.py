@@ -69,7 +69,6 @@ if not MOODLE_TOKEN or not GITHUB_USERNAME:
     exit(1)
 
 # --- Langkah 2: Hitung Nilai dari Hasil Tes (Pytest) ---
-# --- Langkah 2: Hitung Nilai dari Hasil Tes (Pytest) ---
 grade = 0
 pytest_feedback = ""
 
@@ -77,17 +76,11 @@ try:
     with open('report.json') as f:
         report = json.load(f)
     
-    # Ambil bagian summary dari JSON
     summary = report.get('summary', {})
-    
-    # Ambil jumlah lulus dan gagal secara dinamis
     passed_tests = summary.get('passed', 0)
     failed_tests = summary.get('failed', 0)
-    
-    # Hitung total soal berdasarkan jumlah test yang ada di JSON
     TOTAL_SOAL = summary.get('total', passed_tests + failed_tests)
     
-    # Kalkulasi nilai (mencegah error dibagi 0 jika soal tidak terbaca)
     if TOTAL_SOAL > 0:
         grade = (passed_tests / TOTAL_SOAL) * 100
     else:
@@ -129,6 +122,7 @@ search_params = {
 
 user_id = None 
 try:
+    # Untuk metode pencarian (GET), menggunakan params= sudah benar.
     response = requests.get(f"{MOODLE_URL}/webservice/rest/server.php", params=search_params)
     users = response.json().get('users', [])
     if not users:
@@ -141,9 +135,8 @@ except Exception as e:
     exit(1)
 
 # --- Langkah 4: Kirim Nilai dan Gabungan Feedback ke Moodle ---
-# --- Langkah 4: Kirim Nilai dan Gabungan Feedback ke Moodle ---
 if user_id: 
-    # 👇 TAMBAHKAN 1 BARIS INI UNTUK MENGUBAH ENTER MENJADI <br> HTML 👇
+    # Konversi enter (\n) menjadi tag HTML (<br>)
     final_feedback_html = final_feedback.replace('\n', '<br>')
 
     grade_params = {
@@ -157,27 +150,24 @@ if user_id:
         'addattempt': 0,
         'workflowstate': 'graded',
         'applytoall': 1,
-        # 👇 PASTIKAN NAMA VARIABELNYA DIUBAH MENJADI final_feedback_html 👇
         'plugindata[assignfeedbackcomments_editor][text]': final_feedback_html,
         'plugindata[assignfeedbackcomments_editor][format]': 1
     }
 
     try:
-        response = requests.post(f"{MOODLE_URL}/webservice/rest/server.php", params=grade_params)
+        # PERBAIKAN KRUSIAL: Ubah params=grade_params menjadi data=grade_params
+        response = requests.post(f"{MOODLE_URL}/webservice/rest/server.php", data=grade_params)
         
         print("\n--- BUKTI INTEGRASI API MOODLE ---")
         print(f"Status Code HTTP: {response.status_code}")
         print(f"Balasan Server: {response.text}")
         print("----------------------------------\n")
         
-        # Simpan respons JSON ke dalam variabel
         json_response = response.json()
         
-        # Cek apakah balasan berupa dictionary (objek) DAN memiliki kata 'exception'
         if isinstance(json_response, dict) and 'exception' in json_response:
             print(f"❌ Error API: {json_response}")
         else:
-            # Jika balasan null atau tidak ada exception, berarti sukses!
             print("✅ SUKSES! Nilai dan analisis kualitas kode berhasil dikirim ke Moodle.")
 
     except Exception as e:
