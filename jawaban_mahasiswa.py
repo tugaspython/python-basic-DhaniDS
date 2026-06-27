@@ -1,10 +1,11 @@
-	import re
-	
-	def validasi_password(password):
-	# Cek batas panjang karakter
-	if len(password) < 8 or len(password) > 20: 
-return False
-	   
-	# Satu pola Regex untuk mengecek huruf besar, angka, simbol, dan tanpa spasi
-	pattern = r"^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[^ ]+$"
-	return bool(re.match(pattern, password))
+import re
+
+def validasi_password(password):
+    # Cek batas panjang karakter (minimal 8)
+    if len(password) < 8: 
+        return False
+        
+    # Regex yang lebih dinamis:
+    # (?=.*[^A-Za-z0-9 ]) memastikan ada minimal 1 simbol apa saja (termasuk @, !, _, dll)
+    pattern = r"^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9 ])[^ ]+$"
+    return bool(re.match(pattern, password))
